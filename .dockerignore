@@ -1,0 +1,5 @@
+*
+!src/main/resources/schema.graphqls
+!target/*-runner
+!target/*-runner.jar
+!target/lib/*
