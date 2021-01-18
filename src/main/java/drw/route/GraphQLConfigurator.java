@@ -11,15 +11,14 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
 
-
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.ws.rs.Path;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
-@Path("/")
-public class GroupResource {
+@ApplicationScoped
+public class GraphQLConfigurator {
 
     @Inject
     Vertx vertx;
@@ -28,7 +27,6 @@ public class GroupResource {
     GraphQLDataFetchers graphQLDataFetchers;
 
     public void init(@Observes Router router) {
-
         GraphQL graphQL = setupGraphQL();
         GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL);
 
@@ -36,7 +34,6 @@ public class GroupResource {
     }
 
     private GraphQL setupGraphQL(){
-
         String schema = vertx.fileSystem().readFileBlocking("schema.graphqls").toString();
 
         SchemaParser schemaParser = new SchemaParser();
@@ -54,5 +51,4 @@ public class GroupResource {
 
         return new GraphQL.Builder(graphQLSchema).build();
     }
-
 }
