@@ -41,10 +41,6 @@
       <artifactId>quarkus-vertx-graphql</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-jackson</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-graalvm-support</artifactId>
       <version>${google-cloud-graalvm-support.version}</version>
