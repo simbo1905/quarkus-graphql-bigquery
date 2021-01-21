@@ -1,10 +1,11 @@
 # quarkus-graphql project
 
-This is a port port of ``
+This is a port port of [bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) onto Quarkus with GraalVM 
+Native Image support. See below for how to compile and run the native image using Docker. See
+[bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) for how to set up the BigQuery schema, data and 
+security. 
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
-
-See [vertx-web-graphql](https://vertx.io/docs/vertx-web-graphql/java/)
 
 ## Running the application in dev mode
 
@@ -56,8 +57,8 @@ Then we get back:
 mvn package -Pnative -Dquarkus.native.container-build=true
 
 # Then, build the image with:
-docker build -f src/main/docker/Dockerfile.native -t quarkus/microprofile-graphql-quickstart .
+docker build -f src/main/docker/Dockerfile.native -t simonmassey/quarkus-graphql .
 
 # Then run the container using:
-docker run -i --rm -p 8080:8080 quarkus/microprofile-graphql-quickstart
+docker run -it --volume $(pwd):/home/project -e GOOGLE_APPLICATION_CREDENTIALS=/home/project/bigquery-sa.json -p 8080:8080 simonmassey/quarkus-graphql
 ```
