@@ -1,5 +1,6 @@
 *
 !src/main/resources/schema.graphqls
+!src/main/resources/wirings.json
 !target/*-runner
 !target/*-runner.jar
 !target/lib/*

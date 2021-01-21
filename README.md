@@ -1,8 +1,10 @@
 # quarkus-graphql project
 
-This codebase came from [Microservices with Quarkus by Duminda Wanninayake](https://dumisblog.wordpress.com/2020/03/03/microservices-with-quarkus-graphql-api-reactive-mysql/)
+This is a port port of ``
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
+
+See [vertx-web-graphql](https://vertx.io/docs/vertx-web-graphql/java/)
 
 ## Running the application in dev mode
 

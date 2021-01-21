@@ -5,16 +5,22 @@
   <groupId>com.github.simbo1905</groupId>
   <artifactId>quarkus-graphql</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <description>Quarkus Native Image Demo of running GraphQL over BigQuery</description>
+  <scm>
+    <developerConnection>scm:git:https://github.com/simbo1905/${project.artifactId}</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
-    <maven.compiler.parameters>true</maven.compiler.parameters>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus-plugin.version>1.10.5.Final</quarkus-plugin.version>
     <quarkus.platform.version>1.10.5.Final</quarkus.platform.version>
+    <bigquery.version>1.126.3</bigquery.version>
+    <google-http-client.version>1.38.1</google-http-client.version>
+    <lombok.version>1.18.16</lombok.version>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+    <google-cloud-graalvm-support.version>0.2.0</google-cloud-graalvm-support.version>
   </properties>
 
   <dependencyManagement>
@@ -34,19 +40,31 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx-graphql</artifactId>
     </dependency>
-
-    <!-- Test -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
-      <scope>test</scope>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.rest-assured</groupId>
-      <artifactId>rest-assured</artifactId>
-      <scope>test</scope>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-graalvm-support</artifactId>
+      <version>${google-cloud-graalvm-support.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-bigquery</artifactId>
+      <version>${bigquery.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
+      <version>${google-http-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -68,13 +86,11 @@
         <version>${compiler-plugin.version}</version>
       </plugin>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <systemPropertyVariables>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-            <maven.home>${maven.home}</maven.home>
-          </systemPropertyVariables>
+          <source>11</source>
+          <target>11</target>
         </configuration>
       </plugin>
     </plugins>
