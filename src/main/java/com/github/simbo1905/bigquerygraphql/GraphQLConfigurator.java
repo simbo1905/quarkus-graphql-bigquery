@@ -54,11 +54,14 @@ public class GraphQLConfigurator {
         String wirings = vertx.fileSystem().readFileBlocking(wiringsFile).toString();
         ObjectMapper objectMapper = new ObjectMapper();
         List<FieldMetaData> mappings = objectMapper.readValue(wirings, new TypeReference<>() {});
-        RuntimeWiring.Builder wiring = RuntimeWiring.newRuntimeWiring();
-        wiring = wire(wiring, mappings);
 
-        // if you wanted to customise things you would add more wiring here
+        RuntimeWiring.Builder wiring = RuntimeWiring.newRuntimeWiring();
+
+        // wire in metadata driven data fetchers
+        wiring = wire(wiring, mappings);
+        // wire in caching
         wiring = wiring.directiveWiring(new CachedDirective());
+        // if you wanted to customise things you would add more wiring here
 
         // then load the schema
         String schema = vertx.fileSystem().readFileBlocking(schemaFile).toString();
@@ -128,7 +131,7 @@ public class GraphQLConfigurator {
                                 fieldMetaData.mapperCsv,
                                 fieldMetaData.gqlAttr,
                                 fieldMetaData.sqlParam);
-                        // wrap in an async data fetcher so as to not block Vert.x
+                        // wrap in an async data fetcher
                         return builder.dataFetcher(fieldMetaData.fieldName,
                                 (de) -> CompletableFuture.supplyAsync(() -> {
                             try {
