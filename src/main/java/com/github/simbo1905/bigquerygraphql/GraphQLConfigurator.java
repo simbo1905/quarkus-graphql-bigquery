@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -97,21 +98,18 @@ public class GraphQLConfigurator {
                 // return a wrapper that uses the query cache for this field
                 DataFetcher cachedDataFetcher = (env) -> {
                     // sort the arguments map and turn it into a string that can be used as a cache key
-                    // https://stackoverflow.com/a/40649809/329496
-                    val argMapSortedByKey = env.getArguments().entrySet().stream()
-                            .sorted(Map.Entry.<String,Object>comparingByKey().reversed())
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-                    val argsKey = argMapSortedByKey.entrySet().stream()
-                            .map(e->e.getKey()+"|"+e.getValue().toString())
+                    val argMapSortedByKey = new TreeMap<>(env.getArguments());
+                    val cacheKey= argMapSortedByKey.entrySet().stream()
+                            .map(e->e.getKey()+"="+e.getValue().toString())
                             .collect(Collectors.joining(","));
                     // check the query cache
-                    var value = cache.getIfPresent(argsKey);
+                    var value = cache.getIfPresent(cacheKey);
                     if( value == null ){
                         // on cache miss fetch a fresh value
                         value = (CompletableFuture) uncachedDataFetcher.get(env);
                         if( value != null ) {
                             // update the cache
-                            cache.put(argsKey, value);
+                            cache.put(cacheKey, value);
                         }
                     }
                     return value;
