@@ -18,12 +18,12 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ApplicationScoped
@@ -45,41 +45,39 @@ public class GraphQLConfigurator {
     @ConfigProperty(name = "schema.graphqls", defaultValue = "schema.graphqls")
     String schemaFile;
 
-    @ConfigProperty(name = "wirings.cache.pk", defaultValue = "id")
-    String name;
-
     @SneakyThrows
     private GraphQL setupGraphQL(){
-        // first load the metadata and generate the generic DataFetchers.
+        RuntimeWiring.Builder wiring = RuntimeWiring.newRuntimeWiring();
+
+        // wire in caching
+        wiring = wiring.directiveWiring(new FieldQueryCache());
+
+        // load the metadata and generate the generic DataFetchers.
         String wirings = vertx.fileSystem().readFileBlocking(wiringsFile).toString();
         ObjectMapper objectMapper = new ObjectMapper();
         List<FieldMetaData> mappings = objectMapper.readValue(wirings, new TypeReference<>() {});
 
-        RuntimeWiring.Builder wiring = RuntimeWiring.newRuntimeWiring();
-
         // wire in metadata driven data fetchers
         wiring = wire(wiring, mappings);
-        // wire in caching
-        wiring = wiring.directiveWiring(new CachedDirective());
+
         // if you wanted to customise things you would add more wiring here
 
-        // then load the schema
+        // load the schema
         String schema = vertx.fileSystem().readFileBlocking(schemaFile).toString();
         SchemaParser schemaParser = new SchemaParser();
         TypeDefinitionRegistry typeDefinitionRegistry = schemaParser.parse(schema);
         SchemaGenerator schemaGenerator = new SchemaGenerator();
 
         // return the GraphQL server.
-        RuntimeWiring runtimeWiring = wiring.build();
-        GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, wiring.build());
         return new GraphQL.Builder(graphQLSchema).build();
     }
 
     /**
-     * Logic to look for <pre>@cache(ms: 15000)</pre> directives on fields. It then creates a Guava TTL cache
-     * and wraps the DataFetcher invocation in cache get/put logic.
+     * Logic to look for <pre>@cache(ms: 15000)</pre> directives on fields. It creates a Guava TTL cache
+     * for each field and wraps the DataFetcher invocation in cache get/put logic.
      */
-    class CachedDirective implements SchemaDirectiveWiring {
+    class FieldQueryCache implements SchemaDirectiveWiring {
         @Override
         public GraphQLFieldDefinition onField(SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition> environment) {
             GraphQLFieldDefinition field = environment.getElement();
@@ -96,16 +94,25 @@ public class GraphQLConfigurator {
                 GraphQLFieldsContainer parentType = environment.getFieldsContainer();
                 final DataFetcher uncachedDataFetcher = environment.getCodeRegistry().getDataFetcher(parentType, field);
 
-                // return a wrapper that uses the cache for this field
-                DataFetcher cachedDataFetcher = (e) -> {
-                    Object id = e.getArgument(name);
-                    if( id == null )
-                        return null;
-                    var value = cache.getIfPresent(Objects.toString(id));
+                // return a wrapper that uses the query cache for this field
+                DataFetcher cachedDataFetcher = (env) -> {
+                    // sort the arguments map and turn it into a string that can be used as a cache key
+                    // https://stackoverflow.com/a/40649809/329496
+                    val argMapSortedByKey = env.getArguments().entrySet().stream()
+                            .sorted(Map.Entry.<String,Object>comparingByKey().reversed())
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                    val argsKey = argMapSortedByKey.entrySet().stream()
+                            .map(e->e.getKey()+"|"+e.getValue().toString())
+                            .collect(Collectors.joining(","));
+                    // check the query cache
+                    var value = cache.getIfPresent(argsKey);
                     if( value == null ){
-                        value = (CompletableFuture) uncachedDataFetcher.get(e);
-                        if( value != null )
-                            cache.put(Objects.toString(id), value);
+                        // on cache miss fetch a fresh value
+                        value = (CompletableFuture) uncachedDataFetcher.get(env);
+                        if( value != null ) {
+                            // update the cache
+                            cache.put(argsKey, value);
+                        }
                     }
                     return value;
                 };
