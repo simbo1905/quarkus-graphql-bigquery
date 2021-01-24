@@ -1,0 +1,10 @@
+{
+"bindings": [
+ {
+   "members": [
+     "serviceAccount:bigquery-graphql@capable-conduit-300818.iam.gserviceaccount.com"
+   ],
+   "role": "roles/bigquery.dataViewer"
+ }
+]
+}

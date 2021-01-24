@@ -1,22 +1,63 @@
-# quarkus-graphql project
+# Quarkus GraphQL Java Native and BigQuery
 
 This is a port port of [bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) onto Quarkus with GraalVM 
-Native Image support. See below for how to compile and run the native image using Docker. See
-[bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) for how to set up the BigQuery schema, data and 
-security. 
+Native Image support. See below for how to compile and run the native image using Docker. 
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
+
+## BigQuery Setup
+
+On the Google Cloud console:
+
+1. Create a dataset named `demo_graphql_java` see [here](https://cloud.google.com/bigquery/docs/datasets).
+2. Run `create_tables.sql` using the BigQuery console.
+
+First create the tables in a dataset `demo_graphql_java` as described above.
+
+Create a service account `bigquery-graphql` then grant it the bigquery user role:
+
+```sh
+gcloud projects add-iam-policy-binding ${YOUR_PROJECT} \
+  --member="serviceAccount:bigquery-graphql@${YOUR_PROJECT}.iam.gserviceaccount.com" \
+  --role="roles/bigquery.user"
+```
+
+Grant the service account read to the two tables using these instructions [bigquery/docs/table-access-controls](https://cloud.google.com/bigquery/docs/table-access-controls#bq).
+
+In *my* case I did something like this. YMMV you need to change the identifiers to match your project/sa:
+
+```sh
+$ cat policy.json
+{
+"bindings": [
+ {
+   "members": [
+     "serviceAccount:bigquery-graphql@capable-conduit-300818.iam.gserviceaccount.com"
+   ],
+   "role": "roles/bigquery.dataViewer"
+ }
+]
+}
+$ bq set-iam-policy capable-conduit-300818:demo_graphql_java.book policy.json
+$ bq set-iam-policy capable-conduit-300818:demo_graphql_java.author policy.json
+```
+
+On the console create a JSON keyfile for the service account and save it in the current directory.
+Save the file name as "bigquery-sa.json".
+
 
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
-```
-./mvnw quarkus:dev
+
+```shell
+export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/bigquery-sa.json 
+mvn quarkus:dev
 ```
 
 # GraphQL API
 
-Open up localhost:8080/graphql-ui/ and query with:
+Open up http://localhost:8080/graphql-ui/ and query with:
 
 ```graphql
 {
