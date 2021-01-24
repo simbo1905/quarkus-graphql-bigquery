@@ -1,7 +1,9 @@
 # Quarkus GraphQL Java Native and BigQuery
 
 This is a port port of [bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) onto Quarkus with GraalVM 
-Native Image support. See below for how to compile and run the native image using Docker. 
+Native Image support. See below for how to compile and run the native image using Docker. See
+[bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) for how to set up the BigQuery schema, data and 
+security. 
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
