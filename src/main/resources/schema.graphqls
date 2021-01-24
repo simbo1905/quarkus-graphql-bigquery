@@ -1,18 +1,18 @@
 directive @cache(ms : Int!) on FIELD_DEFINITION
 
 type Query {
-  bookById(id: ID): Book @cache(ms: 15000)
+  bookById(id: ID!): Book @cache(ms: 15000)
 }
 
 type Book {
-  id: ID
+  id: ID!
   name: String
   pageCount: Int
-  author: Author @cache(ms: 15000)
+  author: Author! @cache(ms: 15000)
 }
 
 type Author {
-  id: ID
+  id: ID!
   firstName: String
   lastName: String
 }
