@@ -1,4 +1,4 @@
-# quarkus-graphql project
+# Quarkus QraphQL over BigQuery
 
 This is a port port of [bigquery-graphql](https://github.com/simbo1905/bigquery-graphql) onto Quarkus with GraalVM 
 Native Image support. See below for how to compile and run the native image using Docker. See
