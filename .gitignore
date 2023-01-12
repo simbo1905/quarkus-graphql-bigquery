@@ -35,3 +35,4 @@ pom.xml.versionsBackup
 release.properties.mvn/
 .mvn/
 bigquery-sa.json
+.factorypath
